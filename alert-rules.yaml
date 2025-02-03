@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: custom-alert-rules
+  namespace: default
+spec:
+  groups:
+  - name: instance-alerts
+    rules:
+    - alert: HighCPUUsage
+      expr: instance:cpu_usage:rate5m > 0.85
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High CPU usage detected"
+        description: "Instance {{ $labels.instance }} has high CPU usage for more than 5 minutes."

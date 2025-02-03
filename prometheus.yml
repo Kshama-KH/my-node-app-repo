@@ -1,0 +1,51 @@
+# Global configurations
+global:
+  scrape_interval: 15s  # How often to scrape targets
+  evaluation_interval: 15s  # How often to evaluate rules
+
+# Alerting configuration to integrate with AlertManager
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - 'alertmanager.default.svc.cluster.local:9093'  # Change this if your AlertManager is in a different location
+
+# Scrape configurations for scraping Kubernetes metrics
+scrape_configs:
+  - job_name: 'kubernetes-nodes'
+    kubernetes_sd_configs:
+      - role: node  # Scraping nodes from Kubernetes
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: instance  # The target label for the instance will be the node name
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+  - job_name: 'kubernetes-services'
+    kubernetes_sd_configs:
+      - role: service
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service
+
+# Alerting rules (Example: Monitoring CPU usage and disk space)
+rule_files:
+  - "alert-rules.yaml"  # Point to your alert rule file
+
+# Example alerting rule (defined in alerts.yml file):
+# alert: HighCPUUsage
+# expr: avg(rate(container_cpu_usage_seconds_total[5m])) by (container) > 0.9
+# for: 1m
+# labels:
+#   severity: critical
+# annotations:
+#   description: "CPU usage for container {{ $labels.container }} is over 90%."
+
+# Optional scrape config for scraping Prometheus metrics (if needed)
+  - job_name: 'prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:9090']

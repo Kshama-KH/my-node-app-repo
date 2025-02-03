@@ -5,8 +5,8 @@ pipeline {
         // Step to checkout code from Git repository
         stage('Checkout Code') {
             steps {
-                // Checkout code from your repository
-                git 'https://github.com/Kshama-KH/my-node-app-repo.git'
+                // Checkout code from your repository, specifying the 'main' branch
+                git branch: 'main', url: 'https://github.com/Kshama-KH/my-node-app-repo.git'
             }
         }
 

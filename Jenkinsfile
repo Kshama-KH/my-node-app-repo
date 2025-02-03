@@ -22,9 +22,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 // Authenticate with Docker Hub using Jenkins credentials
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh 'docker login -u $DOCKER_USER --password-stdin <<< "$DOCKER_PASS"'
                 }
+
 
                 // Push the built image to Docker Hub
                 sh 'docker push kshamakh/my-node-app:latest'

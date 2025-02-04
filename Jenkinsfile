@@ -18,24 +18,13 @@ pipeline {
             }
         }
 
-        // Step to scan the Docker image for vulnerabilities using Trivy
-        stage('Vulnerability Scanning with Trivy') {
-            steps {
-                script {
-                    echo 'Running Trivy scan on the Docker image...'
-                    // Scan Docker image using Trivy
-                    sh 'trivy image kshamakh/my-node-app:latest'
-                }
-            }
-        }
-
         // Step to scan the Docker image for vulnerabilities using Snyk
         stage('Vulnerability Scanning with Snyk') {
             steps {
                 script {
-                    echo 'Running Snyk scan on the Docker image...'
-                    // Scan Docker image using Snyk
-                    sh 'snyk container test kshamakh/my-node-app:latest'
+                    echo 'Running Snyk scan...'
+                    // Use the full path to Snyk executable
+                    sh 'C:/Users/Kshama/AppData/Roaming/npm/snyk container test kshamakh/my-node-app:latest'
                 }
             }
         }

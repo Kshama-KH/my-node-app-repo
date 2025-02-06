@@ -1,48 +1,57 @@
 pipeline {
-    agent any
+    agent any  // Run on any available agent
 
     stages {
+        // Step to checkout code from Git repository
         stage('Checkout Code') {
             steps {
-                // Checkout code from the GitHub repository
+                // Checkout code from your repository, specifying the 'main' branch
                 git branch: 'main', url: 'https://github.com/Kshama-KH/my-node-app-repo.git'
             }
         }
 
+        // Step to build the Docker image
         stage('Build Docker Image') {
             steps {
-                // Build the Docker image using the Dockerfile in the repository
-                sh 'docker build -t kshamakh/my-node-app:latest .'
+                // Build Docker image using Dockerfile
+                sh 'docker build -t kshamakh/my-node-app:latest .'  // Ensure Dockerfile is in the root of your repo
             }
         }
 
-        stage('Authenticate Snyk') {
-            steps {
-                // Authenticate the Snyk CLI using API token stored in Jenkins credentials
-                withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
-                    sh 'snyk auth $SNYK_TOKEN'
-                }
-            }
-        }
-
-        stage('Vulnerability Scanning with Snyk') {
+        // Step to scan the Docker image for vulnerabilities using Trivy
+        stage('Vulnerability Scanning with Trivy') {
             steps {
                 script {
-                    echo 'Running Snyk vulnerability scan on the Docker image...'
-                    sh 'snyk container test kshamakh/my-node-app:latest'
+                    echo 'Running Trivy scan on the Docker image...'
+                    // Scan Docker image using Trivy
+                    sh 'trivy image kshamakh/my-node-app:latest'
                 }
             }
         }
 
+        // Step to scan the Docker image for vulnerabilities using Snyk
+        stage('Vulnerability Scanning with Trivy') {
+    steps {
+        script {
+            def result = sh(script: 'trivy image --severity HIGH,CRITICAL kshamakh/my-node-app:latest', returnStatus: true)
+            if (result != 0) {
+                error 'Critical vulnerabilities found in the image!'
+            }
+        }
+    }
+}
+
+
+        // Step to push the Docker image to a Docker registry (like Docker Hub)
         stage('Push Docker Image') {
             steps {
-                // Authenticate with Docker Hub and push the Docker image
+                // Authenticate with Docker Hub using Jenkins credentials
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push kshamakh/my-node-app:latest
-                    '''
+                    sh 'docker login -u $DOCKER_USER --password-stdin <<< "$DOCKER_PASS"'
                 }
+
+                // Push the built image to Docker Hub
+                sh 'docker push kshamakh/my-node-app:latest'
             }
         }
     }

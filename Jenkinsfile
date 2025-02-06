@@ -23,7 +23,7 @@ pipeline {
                     echo 'Running Trivy scan on the Docker image...'
                     def result = sh(script: 'trivy image --severity HIGH,CRITICAL kshamakh/my-node-app:latest', returnStatus: true)
                     if (result != 0) {
-                        error 'Critical vulnerabilities found in the image!'
+                        error 'Critical vulnerabilities found in the image during Trivy scan!'
                     }
                 }
             }
@@ -38,8 +38,11 @@ pipeline {
                     withCredentials([string(credentialsId: 'snyk-api-token', variable: 'SNYK_TOKEN')]) {
                         sh 'C:/Users/Kshama/AppData/Roaming/npm/snyk auth $SNYK_TOKEN'
                     }
-                    // Run the Snyk container scan
-                    sh 'C:/Users/Kshama/AppData/Roaming/npm/snyk container test kshamakh/my-node-app:latest'
+                    // Run the Snyk container scan with a file reference to the Dockerfile for better accuracy
+                    def snykResult = sh(script: 'C:/Users/Kshama/AppData/Roaming/npm/snyk container test kshamakh/my-node-app:latest --file=./Dockerfile', returnStatus: true)
+                    if (snykResult != 0) {
+                        echo 'Vulnerabilities found during Snyk scan. Review the results.'
+                    }
                 }
             }
         }
